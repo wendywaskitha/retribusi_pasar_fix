@@ -103,13 +103,18 @@ class Pasar extends Model
         return $this->hasMany(Pedagang::class);
     }
 
-    public function retribusiPembayarans(): HasMany
-    {
-        return $this->hasMany(RetribusiPembayaran::class);
-    }
+    // public function retribusiPembayarans(): HasMany
+    // {
+    //     return $this->hasMany(RetribusiPembayaran::class);
+    // }
 
     public function users() : BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_pasar');
+    }
+
+    public function retribusiPembayarans()
+    {
+        return $this->hasManyThrough(RetribusiPembayaran::class, Pedagang::class);
     }
 }

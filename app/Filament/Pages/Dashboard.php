@@ -12,6 +12,7 @@ use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\TargetRealisasiChart;
 use App\Filament\Widgets\PedagangPerPasarChart;
 use App\Filament\Widgets\RetribusiPerPasarChart;
+use App\Filament\Widgets\RealisasiPerPasarWidget;
 use App\Filament\Widgets\KolektorCollectionWidget;
 use App\Filament\Widgets\KolektorDailyStatsWidget;
 
@@ -73,6 +74,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             // TargetRealisasiChart::make([
             //     'date' => $date,
             // ]),
+            RealisasiPerPasarWidget::class,
         ];
     }
 
