@@ -8,7 +8,7 @@ use Livewire\WithPagination;
 
 class RealisasiPerPasar extends Component
 {
-    
+
     use WithPagination;
 
     public $fromDate;
@@ -46,8 +46,6 @@ class RealisasiPerPasar extends Component
                 $query->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
             }], 'total_biaya');
 
-
-
         if ($this->search) {
             $query->where('name', 'like', '%' . $this->search . '%');
         }
@@ -62,9 +60,16 @@ class RealisasiPerPasar extends Component
             return $pasar;
         });
 
+        // Calculate totals
+        $this->totalPedagang = $pasars->sum('total_pedagang');
+        $this->totalSudahBayar = $pasars->sum('pedagang_sudah_bayar');
+        $this->totalBelumBayar = $pasars->sum('pedagang_belum_bayar');
+        $this->totalRealisasi = $pasars->sum('total_realisasi');
+
         return view('livewire.realisasi-per-pasar', [
             'pasars' => $pasars,
         ]);
+    
     }
 
     public function updatedPerPage($value)
