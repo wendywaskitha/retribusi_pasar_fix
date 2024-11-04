@@ -18,6 +18,12 @@ class RealisasiPerPasar extends Component
     public $fromDate;
     public $toDate;
     public $search = '';
+    public $perPage = 25; // Default per page value
+
+    public $totalPedagang = 0;
+    public $totalSudahBayar = 0;
+    public $totalBelumBayar = 0;
+    public $totalRealisasi = 0;
 
     public function mount()
     {
@@ -33,22 +39,11 @@ class RealisasiPerPasar extends Component
 
     public function render()
     {
-        $query = Pasar::query()
-            ->withCount(['pedagangs as total_pedagang'])
-            ->withCount(['pedagangs as pedagang_sudah_bayar' => function ($query) {
-                $query->whereHas('retribusiPembayarans', function ($q) {
-                    $q->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
-                });
-            }])
-            ->withSum(['retribusiPembayarans as total_realisasi' => function ($query) {
-                $query->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
-            }], 'total_biaya');
+        $query = $this->getFilteredQuery();
 
-        if ($this->search) {
-            $query->where('name', 'like', '%' . $this->search . '%');
-        }
+        $pasars = $query->paginate($this->perPage);
 
-        $pasars = $query->paginate(10);
+        $this->calculateTotals($query);
 
         $pasars->getCollection()->transform(function ($pasar) {
             $pasar->pedagang_belum_bayar = $pasar->total_pedagang - $pasar->pedagang_sudah_bayar;
@@ -61,6 +56,37 @@ class RealisasiPerPasar extends Component
         return view('livewire.realisasi-per-pasar', [
             'pasars' => $pasars,
         ]);
+    }
+
+    private function getFilteredQuery()
+    {
+        return Pasar::query()
+            ->withCount(['pedagangs as total_pedagang'])
+            ->withCount(['pedagangs as pedagang_sudah_bayar' => function ($query) {
+                $query->whereHas('retribusiPembayarans', function ($q) {
+                    $q->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
+                });
+            }])
+            ->withSum(['retribusiPembayarans as total_realisasi' => function ($query) {
+                $query->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
+            }], 'total_biaya')
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%');
+            });
+    }
+
+    private function calculateTotals($query)
+    {
+        $totals = $query->get();
+        $this->totalPedagang = $totals->sum('total_pedagang');
+        $this->totalSudahBayar = $totals->sum('pedagang_sudah_bayar');
+        $this->totalBelumBayar = $this->totalPedagang - $this->totalSudahBayar;
+        $this->totalRealisasi = $totals->sum('total_realisasi');
+    }
+
+    public function updatedPerPage($value)
+    {
+        $this->resetPage(); // Reset page number when per page changes
     }
 
     public function refreshData()
