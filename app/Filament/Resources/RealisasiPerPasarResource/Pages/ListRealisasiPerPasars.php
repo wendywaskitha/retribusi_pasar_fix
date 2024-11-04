@@ -23,4 +23,9 @@ class ListRealisasiPerPasars extends ListRecords
                 ->action(fn () => $this->refresh()),
         ];
     }
+
+    public function refresh(): void
+    {
+        $this->resetTable();
+    }
 }
