@@ -8,11 +8,7 @@ use Livewire\WithPagination;
 
 class RealisasiPerPasar extends Component
 {
-    // public function render()
-    // {
-    //     return view('livewire.realisasi-per-pasar');
-    // }
-
+    
     use WithPagination;
 
     public $fromDate;
@@ -39,11 +35,24 @@ class RealisasiPerPasar extends Component
 
     public function render()
     {
-        $query = $this->getFilteredQuery();
+        $query = Pasar::query()
+            ->withCount(['pedagangs as total_pedagang'])
+            ->withCount(['pedagangs as pedagang_sudah_bayar' => function ($query) {
+                $query->whereHas('retribusiPembayarans', function ($q) {
+                    $q->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
+                });
+            }])
+            ->withSum(['retribusiPembayarans as total_realisasi' => function ($query) {
+                $query->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
+            }], 'total_biaya');
+
+
+
+        if ($this->search) {
+            $query->where('name', 'like', '%' . $this->search . '%');
+        }
 
         $pasars = $query->paginate($this->perPage);
-
-        $this->calculateTotals($query);
 
         $pasars->getCollection()->transform(function ($pasar) {
             $pasar->pedagang_belum_bayar = $pasar->total_pedagang - $pasar->pedagang_sudah_bayar;
@@ -56,32 +65,6 @@ class RealisasiPerPasar extends Component
         return view('livewire.realisasi-per-pasar', [
             'pasars' => $pasars,
         ]);
-    }
-
-    private function getFilteredQuery()
-    {
-        return Pasar::query()
-            ->withCount(['pedagangs as total_pedagang'])
-            ->withCount(['pedagangs as pedagang_sudah_bayar' => function ($query) {
-                $query->whereHas('retribusiPembayarans', function ($q) {
-                    $q->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
-                });
-            }])
-            ->withSum(['retribusiPembayarans as total_realisasi' => function ($query) {
-                $query->whereBetween('tanggal_bayar', [$this->fromDate, $this->toDate]);
-            }], 'total_biaya')
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%');
-            });
-    }
-
-    private function calculateTotals($query)
-    {
-        $totals = $query->get();
-        $this->totalPedagang = $totals->sum('total_pedagang');
-        $this->totalSudahBayar = $totals->sum('pedagang_sudah_bayar');
-        $this->totalBelumBayar = $this->totalPedagang - $this->totalSudahBayar;
-        $this->totalRealisasi = $totals->sum('total_realisasi');
     }
 
     public function updatedPerPage($value)
