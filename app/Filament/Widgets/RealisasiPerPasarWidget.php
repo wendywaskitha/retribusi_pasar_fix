@@ -48,6 +48,19 @@ class RealisasiPerPasarWidget extends BaseWidget
                         Tables\Columns\Summarizers\Sum::make()
                             ->label('Total Keseluruhan')
                     ),
+                Tables\Columns\TextColumn::make('persentase_realisasi')
+                    ->label('Persentase')
+                    ->getStateUsing(function ($record) {
+                        if ($record->total_pedagang == 0) return '0%';
+                        return number_format(($record->pedagang_sudah_bayar / $record->total_pedagang) * 100, 2) . '%';
+                    })
+                    ->sortable()
+                    ->color(function ($state) {
+                        $percentage = floatval(str_replace('%', '', $state));
+                        if ($percentage >= 80) return 'success';
+                        if ($percentage >= 50) return 'warning';
+                        return 'danger';
+                    }),
                 Tables\Columns\TextColumn::make('pedagang_sudah_bayar')
                     ->label('Sudah Bayar')
                     ->sortable()
@@ -76,19 +89,7 @@ class RealisasiPerPasarWidget extends BaseWidget
                                 return $query->sum('total_realisasi') ?: 0; // Ensure 0 if sum is empty
                             })
                     ),
-                Tables\Columns\TextColumn::make('persentase_realisasi')
-                    ->label('Persentase')
-                    ->getStateUsing(function ($record) {
-                        if ($record->total_pedagang == 0) return '0%';
-                        return number_format(($record->pedagang_sudah_bayar / $record->total_pedagang) * 100, 2) . '%';
-                    })
-                    ->sortable()
-                    ->color(function ($state) {
-                        $percentage = floatval(str_replace('%', '', $state));
-                        if ($percentage >= 80) return 'success';
-                        if ($percentage >= 50) return 'warning';
-                        return 'danger';
-                    }),
+
             ])
             ->defaultSort('name', 'asc')
             ->paginated(false)

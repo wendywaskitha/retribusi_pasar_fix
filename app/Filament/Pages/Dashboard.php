@@ -65,6 +65,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             StatsOverviewWidget::make([
                 'date' => $date,
             ]),
+            RealisasiPerPasarWidget::class,
             PedagangPerPasarChart::make([
                 'date' => $date,
             ]),
@@ -74,7 +75,6 @@ class Dashboard extends \Filament\Pages\Dashboard
             // TargetRealisasiChart::make([
             //     'date' => $date,
             // ]),
-            RealisasiPerPasarWidget::class,
         ];
     }
 
