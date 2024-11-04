@@ -40,7 +40,10 @@ class RealisasiPerPasarWidget extends BaseWidget
                     ),
                 Tables\Columns\TextColumn::make('belum_bayar')
                     ->label('Belum Bayar')
-                    ->getStateUsing(fn ($record) => $record->total_pedagang - $this->getPedagangSudahBayar($record->id, $this->filterDate))
+                    ->getStateUsing(function ($record) {
+                        $belumBayar = $record->total_pedagang - $this->getPedagangSudahBayar($record->id, $this->filterDate);
+                        return number_format($belumBayar, 0, ',', '.'); // Indonesian number format
+                    })
                     ->color('danger')
                     ->summarize(
                         Tables\Columns\Summarizers\Summarizer::make()
@@ -49,12 +52,11 @@ class RealisasiPerPasarWidget extends BaseWidget
                     ),
                 Tables\Columns\TextColumn::make('total_realisasi')
                     ->label('Total Realisasi')
-                    ->money('IDR')
-                    ->getStateUsing(fn ($record) => $this->getTotalRealisasi($record->id, $this->filterDate))
+                    ->getStateUsing(fn ($record) => 'Rp ' . number_format($this->getTotalRealisasi($record->id, $this->filterDate), 0, ',', '.'))
                     ->summarize(
                         Tables\Columns\Summarizers\Summarizer::make()
                             ->label('Total Realisasi Keseluruhan')
-                            ->using(fn ($query) => $this->getTotalRealisasiKeseluruhan($query))
+                            ->using(fn ($query) => 'Rp ' . $this->getTotalRealisasiKeseluruhan($query))
                     ),
                 Tables\Columns\TextColumn::make('persentase_realisasi')
                     ->label('Persentase')
@@ -85,6 +87,13 @@ class RealisasiPerPasarWidget extends BaseWidget
                         $this->filterDate = $data['date'] ?? now()->toDateString();
                         return $query;
                     })
+                    ->indicateUsing(function (array $data): ?string {
+                        if ($data['date'] ?? null) {
+                            return 'Tanggal: ' . Carbon::parse($data['date'])->format('d M Y');
+                        }
+
+                        return null;
+                    }),
             ])
             ->filtersFormColumns(3)
             ->striped();
@@ -140,17 +149,20 @@ class RealisasiPerPasarWidget extends BaseWidget
     {
         $totalPedagang = $query->sum('total_pedagang');
         $totalSudahBayar = $this->getTotalSudahBayar($query);
-        return $totalPedagang - $totalSudahBayar;
+        $belumBayar = $totalPedagang - $totalSudahBayar;
+        return number_format($belumBayar, 0, ',', '.'); // Indonesian number format
     }
 
     protected function getTotalRealisasiKeseluruhan($query)
     {
         $pasarIds = $query->pluck('id');
-        return DB::table('retribusi_pembayarans')
+        $totalRealisasi = DB::table('retribusi_pembayarans')
             ->join('pedagangs', 'retribusi_pembayarans.pedagang_id', '=', 'pedagangs.id')
             ->whereIn('pedagangs.pasar_id', $pasarIds)
             ->whereDate('retribusi_pembayarans.tanggal_bayar', $this->filterDate ?? now()->toDateString())
             ->sum('retribusi_pembayarans.total_biaya');
+
+        return number_format($totalRealisasi, 0, ',', '.'); // Format as IDR
     }
 
     protected function getRataRataPersentase($query)
