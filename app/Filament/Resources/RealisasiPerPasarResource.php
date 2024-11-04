@@ -106,6 +106,14 @@ class RealisasiPerPasarResource extends Resource
                         if ($percentage >= 50) return 'warning';
                         return 'danger';
                     }),
+                    Tables\Columns\TextColumn::make('retribusi_pembayarans_sum_total_biaya')
+                    ->label('Total Retribusi')
+                    ->money('IDR')
+                    ->sortable()
+                    ->summarize([
+                        Tables\Columns\Summarizers\Sum::make('retribusi_pembayarans_sum_total_biaya')
+                            ->money('IDR'),
+                    ]),
             ])
             ->filters([
                 Tables\Filters\Filter::make('date')
