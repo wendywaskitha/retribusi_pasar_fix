@@ -2,15 +2,14 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Pasar;
 use Filament\Tables;
-use Filament\Forms;
+use App\Models\Pasar;
 use Filament\Tables\Table;
-use Filament\Forms\Components\DatePicker;
-use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Widgets\TableWidget as BaseWidget;
 
 class RealisasiPerPasarWidget extends BaseWidget
 {
@@ -29,41 +28,48 @@ class RealisasiPerPasarWidget extends BaseWidget
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_pedagang')
                     ->label('Total Pedagang')
-                    ->sortable()
-                    ->getStateUsing(function ($record) {
-                        return $this->getTotalPedagang($record);
-                    }),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('pedagang_sudah_bayar')
                     ->label('Sudah Bayar')
-                    ->sortable()
-                    ->getStateUsing(function ($record) {
-                        return $this->getPedagangSudahBayar($record, $this->filterDate);
-                    })
-                    ->color('success'),
+                    ->getStateUsing(fn ($record) => $this->getPedagangSudahBayar($record->id, $this->filterDate))
+                    ->color('success')
+                    ->summarize(
+                        Tables\Columns\Summarizers\Summarizer::make()
+                            ->label('Total Sudah Bayar')
+                            ->using(fn ($query) => $this->getTotalSudahBayar($query))
+                    ),
                 Tables\Columns\TextColumn::make('belum_bayar')
                     ->label('Belum Bayar')
-                    ->getStateUsing(fn ($record) => $this->getTotalPedagang($record) - $this->getPedagangSudahBayar($record, $this->filterDate))
-                    ->sortable()
-                    ->color('danger'),
+                    ->getStateUsing(fn ($record) => $record->total_pedagang - $this->getPedagangSudahBayar($record->id, $this->filterDate))
+                    ->color('danger')
+                    ->summarize(
+                        Tables\Columns\Summarizers\Summarizer::make()
+                            ->label('Total Belum Bayar')
+                            ->using(fn ($query) => $this->getTotalBelumBayar($query))
+                    ),
                 Tables\Columns\TextColumn::make('total_realisasi')
                     ->label('Total Realisasi')
                     ->money('IDR')
-                    ->sortable()
-                    ->getStateUsing(function ($record) {
-                        return $this->getTotalRealisasi($record, $this->filterDate);
-                    }),
+                    ->getStateUsing(fn ($record) => $this->getTotalRealisasi($record->id, $this->filterDate))
+                    ->summarize(
+                        Tables\Columns\Summarizers\Summarizer::make()
+                            ->label('Total Realisasi Keseluruhan')
+                            ->using(fn ($query) => $this->getTotalRealisasiKeseluruhan($query))
+                    ),
                 Tables\Columns\TextColumn::make('persentase_realisasi')
                     ->label('Persentase')
-                    ->getStateUsing(function ($record) {
-                        return $this->getPersentaseRealisasi($record, $this->filterDate);
-                    })
-                    ->sortable()
+                    ->getStateUsing(fn ($record) => $this->getPersentaseRealisasi($record->id, $this->filterDate))
                     ->color(function ($state) {
                         $percentage = floatval(str_replace('%', '', $state));
                         if ($percentage >= 80) return 'success';
                         if ($percentage >= 50) return 'warning';
                         return 'danger';
-                    }),
+                    })
+                    ->summarize(
+                        Tables\Columns\Summarizers\Summarizer::make()
+                            ->label('Rata-rata Persentase')
+                            ->using(fn ($query) => $this->getRataRataPersentase($query))
+                    ),
             ])
             ->defaultSort('name', 'asc')
             ->paginated(false)
@@ -80,70 +86,81 @@ class RealisasiPerPasarWidget extends BaseWidget
                         return $query;
                     })
             ])
-            ->filtersFormColumns(3);
+            ->filtersFormColumns(3)
+            ->striped();
     }
 
     protected function getTableQuery(): Builder
     {
-        return Pasar::query();
+        return Pasar::query()
+            ->withCount('pedagangs as total_pedagang');
     }
 
-    protected function getTotalPedagang($record): int
+    protected function getPedagangSudahBayar($pasarId, $date): int
     {
-        return $record->pedagangs()->count();
-    }
-
-    protected function getPedagangSudahBayar($record, $date): int
-    {
-        return $record->pedagangs()
-            ->whereHas('retribusiPembayarans', function ($query) use ($date) {
-                $query->whereDate('tanggal_bayar', $date);
-            })
-            ->count();
-    }
-
-    protected function getTotalRealisasi($record, $date): float
-    {
-        return $record->pedagangs()
+        return DB::table('pedagangs')
             ->join('retribusi_pembayarans', 'pedagangs.id', '=', 'retribusi_pembayarans.pedagang_id')
-            ->whereDate('tanggal_bayar', $date)
-            ->sum('total_biaya');
+            ->where('pedagangs.pasar_id', $pasarId)
+            ->whereDate('retribusi_pembayarans.tanggal_bayar', $date)
+            ->distinct('pedagangs.id')
+            ->count('pedagangs.id');
     }
 
-    protected function getPersentaseRealisasi($record, $date): string
+    protected function getTotalRealisasi($pasarId, $date): float
     {
-        $totalPedagang = $this->getTotalPedagang($record);
-        $pedagangSudahBayar = $this->getPedagangSudahBayar($record, $date);
+        return DB::table('retribusi_pembayarans')
+            ->join('pedagangs', 'retribusi_pembayarans.pedagang_id', '=', 'pedagangs.id')
+            ->where('pedagangs.pasar_id', $pasarId)
+            ->whereDate('retribusi_pembayarans.tanggal_bayar', $date)
+            ->sum('retribusi_pembayarans.total_biaya');
+    }
+
+    protected function getPersentaseRealisasi($pasarId, $date): string
+    {
+        $totalPedagang = DB::table('pedagangs')->where('pasar_id', $pasarId)->count();
+        $pedagangSudahBayar = $this->getPedagangSudahBayar($pasarId, $date);
 
         if ($totalPedagang == 0) return '0%';
 
         return number_format(($pedagangSudahBayar / $totalPedagang) * 100, 2) . '%';
     }
 
-    protected function getTableHeading(): string
+    protected function getTotalSudahBayar($query)
     {
-        $date = $this->filterDate ?? now()->toDateString();
-        return 'Realisasi Per Pasar - ' . Carbon::parse($date)->format('d F Y');
+        $pasarIds = $query->pluck('id');
+        return DB::table('pedagangs')
+            ->join('retribusi_pembayarans', 'pedagangs.id', '=', 'retribusi_pembayarans.pedagang_id')
+            ->whereIn('pedagangs.pasar_id', $pasarIds)
+            ->whereDate('retribusi_pembayarans.tanggal_bayar', $this->filterDate ?? now()->toDateString())
+            ->distinct('pedagangs.id')
+            ->count('pedagangs.id');
     }
 
-    protected function getFooter(): ?View
+    protected function getTotalBelumBayar($query)
     {
-        $totalPedagang = Pasar::withCount('pedagangs')->get()->sum('pedagangs_count');
-        $totalSudahBayar = Pasar::withCount(['pedagangs' => function ($query) {
-            $query->whereHas('retribusiPembayarans', function ($subQuery) {
-                $subQuery->whereDate('tanggal_bayar', $this->filterDate ?? now()->toDateString());
-            });
-        }])->get()->sum('pedagangs_count');
-        $totalRealisasi = Pasar::withSum(['retribusiPembayarans' => function ($query) {
-            $query->whereDate('tanggal_bayar', $this->filterDate ?? now()->toDateString());
-        }], 'total_biaya')->get()->sum('retribusi_pembayarans_sum_total_biaya');
+        $totalPedagang = $query->sum('total_pedagang');
+        $totalSudahBayar = $this->getTotalSudahBayar($query);
+        return $totalPedagang - $totalSudahBayar;
+    }
 
-        return view('filament.widgets.realisasi-per-pasar-footer', [
-            'totalPedagang' => $totalPedagang,
-            'totalSudahBayar' => $totalSudahBayar,
-            'totalBelumBayar' => $totalPedagang - $totalSudahBayar,
-            'totalRealisasi' => $totalRealisasi,
-            'persentaseRealisasi' => $totalPedagang > 0 ? number_format(($totalSudahBayar / $totalPedagang) * 100, 2) . '%' : '0%',
-        ]);
+    protected function getTotalRealisasiKeseluruhan($query)
+    {
+        $pasarIds = $query->pluck('id');
+        return DB::table('retribusi_pembayarans')
+            ->join('pedagangs', 'retribusi_pembayarans.pedagang_id', '=', 'pedagangs.id')
+            ->whereIn('pedagangs.pasar_id', $pasarIds)
+            ->whereDate('retribusi_pembayarans.tanggal_bayar', $this->filterDate ?? now()->toDateString())
+            ->sum('retribusi_pembayarans.total_biaya');
+    }
+
+    protected function getRataRataPersentase($query)
+    {
+        $totalPasar = $query->count();
+        $totalPedagang = $query->sum('total_pedagang');
+        $totalSudahBayar = $this->getTotalSudahBayar($query);
+
+        if ($totalPedagang == 0) return '0%';
+
+        return number_format(($totalSudahBayar / $totalPedagang) * 100, 2) . '%';
     }
 }
