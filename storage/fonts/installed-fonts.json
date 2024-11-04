@@ -1,0 +1,8 @@
+{
+    "dejavu sans": {
+        "bold": "D:\\JAKUTECH\\retribusi_pasar\\vendor\\dompdf\\dompdf\/lib\/fonts\/DejaVuSans-Bold",
+        "bold_italic": "D:\\JAKUTECH\\retribusi_pasar\\vendor\\dompdf\\dompdf\/lib\/fonts\/DejaVuSans-BoldOblique",
+        "italic": "D:\\JAKUTECH\\retribusi_pasar\\vendor\\dompdf\\dompdf\/lib\/fonts\/DejaVuSans-Oblique",
+        "normal": "dejavu_sans_normal_a42ef2288a6a621e2dfd09564f954b94"
+    }
+}

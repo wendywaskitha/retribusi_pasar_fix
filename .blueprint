@@ -1,0 +1,31 @@
+created:
+    - database/factories/KecamatanFactory.php
+    - database/factories/DesaFactory.php
+    - database/factories/PasarFactory.php
+    - database/factories/TipepedagangFactory.php
+    - database/factories/RetribusiFactory.php
+    - database/factories/PedagangFactory.php
+    - database/factories/RetribusiPembayaranFactory.php
+    - database/migrations/2024_10_29_020226_create_kecamatans_table.php
+    - database/migrations/2024_10_29_020227_create_desas_table.php
+    - database/migrations/2024_10_29_020228_create_pasars_table.php
+    - database/migrations/2024_10_29_020229_create_tipepedagangs_table.php
+    - database/migrations/2024_10_29_020230_create_retribusis_table.php
+    - database/migrations/2024_10_29_020231_create_pedagangs_table.php
+    - database/migrations/2024_10_29_020232_create_retribusi_pembayarans_table.php
+    - app/Models/Kecamatan.php
+    - app/Models/Desa.php
+    - app/Models/Pasar.php
+    - app/Models/Tipepedagang.php
+    - app/Models/Retribusi.php
+    - app/Models/Pedagang.php
+    - app/Models/RetribusiPembayaran.php
+models:
+    User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable' }
+    Kecamatan: { name: 'string:100', timestamps: timestamps, relationships: { hasMany: 'Desa, Pasar, Pedagang' } }
+    Desa: { name: 'string:100', kecamatan_id: 'id foreign', timestamps: timestamps, relationships: { belongsTo: Kecamatan, hasMany: 'Pasar, Pedagang' } }
+    Pasar: { name: 'string:100', address: 'text nullable', latitude: 'double nullable', longitude: 'double nullable', kecamatan_id: 'id foreign', desa_id: 'id foreign', timestamps: timestamps, relationships: { belongsTo: 'Kecamatan, Desa', hasMany: 'Pedagang, RetribusiPembayaran' } }
+    Tipepedagang: { name: 'string:100', description: 'text nullable', timestamps: timestamps, relationships: { hasMany: Pedagang } }
+    Retribusi: { name: 'string:100', biaya: 'decimal:10,2', timestamps: timestamps, relationships: { hasMany: RetribusiPembayaran } }
+    Pedagang: { name: 'string:100', nik: 'string:16 nullable', alamat: 'text nullable', tipepedagang_id: 'id foreign', kecamatan_id: 'id foreign', desa_id: 'id foreign', pasar_id: 'id foreign', timestamps: timestamps, relationships: { belongsTo: 'Tipepedagang, Kecamatan, Desa, Pasar', hasMany: RetribusiPembayaran } }
+    RetribusiPembayaran: { pedagang_id: 'id foreign', retribusi_id: 'id foreign', pasar_id: 'id foreign', tanggal_bayar: date, status: 'enum:pending,lunas', timestamps: timestamps, relationships: { belongsTo: 'Pedagang, Retribusi, Pasar' } }

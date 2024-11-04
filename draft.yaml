@@ -1,0 +1,63 @@
+models:
+  Kecamatan:
+    name: string:100
+    timestamps: true
+    relationships:
+      hasMany: Desa, Pasar, Pedagang
+
+  Desa:
+    name: string:100
+    kecamatan_id: id foreign
+    timestamps: true
+    relationships:
+      belongsTo: Kecamatan
+      hasMany: Pasar, Pedagang
+
+  Pasar:
+    name: string:100
+    address: text nullable
+    latitude: double nullable
+    longitude: double nullable
+    kecamatan_id: id foreign
+    desa_id: id foreign
+    timestamps: true
+    relationships:
+      belongsTo: Kecamatan, Desa
+      hasMany: Pedagang, RetribusiPembayaran
+
+  Tipepedagang:
+    name: string:100
+    description: text nullable
+    timestamps: true
+    relationships:
+      hasMany: Pedagang
+
+  Retribusi:
+    name: string:100
+    biaya: decimal:10,2
+    timestamps: true
+    relationships:
+      hasMany: RetribusiPembayaran
+
+  Pedagang:
+    name: string:100
+    nik: string:16 nullable
+    alamat: text nullable
+    tipepedagang_id: id foreign
+    kecamatan_id: id foreign
+    desa_id: id foreign
+    pasar_id: id foreign
+    timestamps: true
+    relationships:
+      belongsTo: Tipepedagang, Kecamatan, Desa, Pasar
+      hasMany: RetribusiPembayaran
+
+  RetribusiPembayaran:
+    pedagang_id: id foreign
+    retribusi_id: id foreign
+    pasar_id: id foreign
+    tanggal_bayar: date
+    status: enum:pending,lunas
+    timestamps: true
+    relationships:
+      belongsTo: Pedagang, Retribusi, Pasar
