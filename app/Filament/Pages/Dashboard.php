@@ -26,22 +26,22 @@ class Dashboard extends \Filament\Pages\Dashboard
         ]);
     }
 
-    public function form(Form $form): Form
-    {
+    // public function form(Form $form): Form
+    // {
 
-        return $form
-            ->schema([
-                DatePicker::make('date')
-                    ->label('Filter Tanggal')
-                    ->default(now())
-                    ->native(false)
-                    ->live()
-                    ->afterStateUpdated(function () {
-                        $this->refreshDashboard();
-                    }),
-            ])
-            ->statePath('data');
-    }
+    //     return $form
+    //         ->schema([
+    //             DatePicker::make('date')
+    //                 ->label('Filter Tanggal')
+    //                 ->default(now())
+    //                 ->native(false)
+    //                 ->live()
+    //                 ->afterStateUpdated(function () {
+    //                     $this->refreshDashboard();
+    //                 }),
+    //         ])
+    //         ->statePath('data');
+    // }
 
     public function getHeaderWidgets(): array
     {
@@ -70,9 +70,9 @@ class Dashboard extends \Filament\Pages\Dashboard
             RetribusiPerPasarChart::make([
                 'date' => $date,
             ]),
-            TargetRealisasiChart::make([
-                'date' => $date,
-            ]),
+            // TargetRealisasiChart::make([
+            //     'date' => $date,
+            // ]),
         ];
     }
 
