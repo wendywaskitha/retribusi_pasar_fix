@@ -6,18 +6,42 @@ use Illuminate\Support\Carbon;
 use Filament\Widgets\ChartWidget;
 use App\Models\RetribusiPembayaran;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
 
 class KolektorCollectionWidget extends ChartWidget
 {
     protected static ?string $heading = 'Grafik Pengumpulan Retribusi';
 
-    public string $date;
-    
+    public ?string $selectedMonth = null;
+
+    protected int | string | array $columnSpan = 'full';
+
+    protected function getFormSchema(): array
+    {
+        return [
+            Select::make('selectedMonth')
+                ->label('Pilih Bulan')
+                ->options($this->getMonthOptions())
+                ->default(now()->format('m'))
+                ->reactive()
+                ->afterStateUpdated(fn () => $this->updateChartData()),
+        ];
+    }
+
+    protected function getMonthOptions(): array
+    {
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthName = Carbon::create()->month($i)->locale('id')->monthName;
+            $months[sprintf('%02d', $i)] = $monthName;
+        }
+        return $months;
+    }
 
     protected function getData(): array
     {
         $user = Auth::user();
-        
+
         if (!$user->hasRole('kolektor')) {
             return [
                 'datasets' => [],
@@ -25,36 +49,38 @@ class KolektorCollectionWidget extends ChartWidget
             ];
         }
 
-        $targetDate = Carbon::parse($this->date);
-        
+        $selectedMonth = $this->selectedMonth ?? now()->format('m');
+        $currentYear = now()->year;
+
         // Get assigned pasar IDs
         $pasarIds = $user->pasars->pluck('id');
 
-        // Get collections for each hour of the day
+        // Get collections for each day of the selected month
         $collections = RetribusiPembayaran::query()
             ->whereIn('pasar_id', $pasarIds)
-            ->whereDate('tanggal_bayar', $targetDate)
-            ->selectRaw('HOUR(tanggal_bayar) as hour, SUM(total_biaya) as total')
-            ->groupBy('hour')
-            ->orderBy('hour')
+            ->whereYear('tanggal_bayar', $currentYear)
+            ->whereMonth('tanggal_bayar', $selectedMonth)
+            ->selectRaw('DATE(tanggal_bayar) as date, SUM(total_biaya) as total')
+            ->groupBy('date')
+            ->orderBy('date')
             ->get();
 
-        // Prepare data for all 24 hours
-        $hourlyData = array_fill(0, 24, 0);
+        // Prepare data for all days in the month
+        $daysInMonth = Carbon::create($currentYear, $selectedMonth)->daysInMonth;
+        $dailyData = array_fill(1, $daysInMonth, 0);
         foreach ($collections as $collection) {
-            $hourlyData[$collection->hour] = $collection->total;
+            $day = (int)Carbon::parse($collection->date)->format('d');
+            $dailyData[$day] = $collection->total;
         }
 
-        // Create labels for all 24 hours
-        $labels = array_map(function ($hour) {
-            return sprintf('%02d:00', $hour);
-        }, range(0, 23));
+        // Create labels for all days in the month
+        $labels = range(1, $daysInMonth);
 
         return [
             'datasets' => [
                 [
                     'label' => 'Total Retribusi',
-                    'data' => array_values($hourlyData),
+                    'data' => array_values($dailyData),
                     'borderColor' => '#36A2EB',
                     'fill' => false,
                 ],
