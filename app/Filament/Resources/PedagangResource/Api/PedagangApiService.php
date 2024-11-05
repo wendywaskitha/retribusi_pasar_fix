@@ -1,9 +1,11 @@
 <?php
 namespace App\Filament\Resources\PedagangResource\Api;
 
-use Rupadana\ApiService\ApiService;
-use App\Filament\Resources\PedagangResource;
 use Illuminate\Routing\Router;
+use Rupadana\ApiService\ApiService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\PedagangResource;
 
 
 class PedagangApiService extends ApiService
@@ -21,4 +23,5 @@ class PedagangApiService extends ApiService
         ];
 
     }
+
 }

@@ -2,6 +2,7 @@
 namespace App\Filament\Resources\PedagangResource\Api\Handlers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\PedagangResource;
 
@@ -24,9 +25,17 @@ class UpdateHandler extends Handlers {
 
         $model = static::getModel()::find($id);
 
+        // Apply filtering for kolektor role
+        $user = Auth::user();
+        if ($user && $user->hasRole('kolektor')) {
+            $assignedPasarIds = $user->pasars()->pluck('pasars.id')->toArray();
+            $model->whereIn('pasar_id', $assignedPasarIds);
+        }
+
         if (!$model) return static::sendNotFoundResponse();
 
         $model->fill($request->all());
+
 
         $model->save();
 
