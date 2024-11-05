@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Panel;
 use App\Models\Pasar;
 use App\Models\Pedagang;
 use App\Traits\HasLastLoginAt;
