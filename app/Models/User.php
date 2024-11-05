@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Models\Pasar;
 use App\Models\Pedagang;
 use App\Traits\HasLastLoginAt;
+use Laravel\Sanctum\HasApiTokens;
 use App\Models\RetribusiPembayaran;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasRoles, HasFactory, Notifiable, HasLastLoginAt;
+    use HasApiTokens, HasRoles, HasFactory, Notifiable, HasLastLoginAt;
 
     /**
      * The attributes that are mass assignable.
