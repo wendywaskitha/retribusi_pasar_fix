@@ -81,7 +81,9 @@ class RealisasiPerPasarWidget extends BaseWidget
                         DatePicker::make('date')
                             ->label('Tanggal')
                             ->default(now())
-                            ->maxDate(now()),
+                            ->maxDate(now())
+                            // ->native(false)
+                            // ->closeOnDateSelection(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $this->filterDate = $data['date'] ?? now()->toDateString();
@@ -95,7 +97,7 @@ class RealisasiPerPasarWidget extends BaseWidget
                         return null;
                     }),
             ])
-            ->filtersFormColumns(3)
+            // ->filtersFormColumns(3)
             ->striped();
     }
 
