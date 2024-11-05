@@ -21,6 +21,7 @@ class StatsOverviewWidget extends BaseWidget
     // Optional: Configure the widget
     protected int | string | array $columnSpan = 'full';
 
+
     public static function canView(): bool
     {
         return true;
@@ -57,17 +58,29 @@ class StatsOverviewWidget extends BaseWidget
             Stat::make('Target Retribusi Tahunan', 'Rp ' . number_format($yearlyTarget, 0, ',', '.'))
                 ->description('Target tahun ' . $currentDate->year)
                 ->descriptionIcon('heroicon-m-calendar')
-                ->color('warning'),
+                ->icon('heroicon-o-currency-dollar')
+                ->color('warning')
+                ->extraAttributes([
+                    'class' => 'stat-card stat-card-target',
+                ]),
 
             Stat::make('Realisasi Retribusi', 'Rp ' . number_format($yearlyRealization, 0, ',', '.'))
                 ->description($percentageRealization . '% dari target')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->color($percentageRealization >= 100 ? 'success' : 'warning'),
+                ->icon('heroicon-o-chart-bar')
+                ->color($percentageRealization >= 100 ? 'success' : 'warning')
+                ->extraAttributes([
+                    'class' => 'stat-card stat-card-realization',
+                ]),
 
             Stat::make('Pemasukan Hari Ini', 'Rp ' . number_format($todayCollection, 0, ',', '.'))
                 ->description('Total pedagang: ' . number_format($totalPedagang))
                 ->descriptionIcon('heroicon-m-shopping-bag')
-                ->color('success'),
+                ->icon('heroicon-o-banknotes')
+                ->color('success')
+                ->extraAttributes([
+                    'class' => 'stat-card stat-card-income',
+                ]),
         ];
     }
 

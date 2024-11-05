@@ -56,34 +56,39 @@ class RetribusiStatsOverview extends BaseWidget
             Stat::make('Hari Ini', 'Rp ' . number_format($todayCollection, 0, ',', '.'))
                 ->description($dailyChange >= 0 ? 'Naik ' . number_format(abs($dailyChange), 1) . '%' : 'Turun ' . number_format(abs($dailyChange), 1) . '%')
                 ->descriptionIcon($dailyChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                ->icon('heroicon-o-banknotes')
                 ->color($dailyChange >= 0 ? 'success' : 'danger')
                 ->chart([
                     $yesterdayCollection,
                     $todayCollection,
                 ])
                 ->extraAttributes([
-                    'style' => 'background-color: rgb(239 246 255) !important;', // bg-blue-50
+                    'class' => 'stats-card stats-card-today',
                 ]),
 
             Stat::make('Bulan Ini', 'Rp ' . number_format($thisMonthCollection, 0, ',', '.'))
                 ->description($monthlyChange >= 0 ? 'Naik ' . number_format(abs($monthlyChange), 1) . '%' : 'Turun ' . number_format(abs($monthlyChange), 1) . '%')
                 ->descriptionIcon($monthlyChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                ->icon('heroicon-o-calendar')
                 ->color($monthlyChange >= 0 ? 'success' : 'danger')
                 ->chart([
                     $lastMonthCollection,
                     $thisMonthCollection,
                 ])
                 ->extraAttributes([
-                    'style' => 'background-color: rgb(240 253 244);', // bg-green-50
+                    'class' => 'stats-card stats-card-month',
                 ]),
 
             Stat::make('Kemarin', 'Rp ' . number_format($yesterdayCollection, 0, ',', '.'))
+                ->description('Total collection kemarin')
+                ->descriptionIcon('heroicon-m-clock')
+                ->icon('heroicon-o-clock')
                 ->chart([
                     $yesterdayCollection,
                 ])
                 ->color('warning')
                 ->extraAttributes([
-                    'style' => 'background-color: rgb(250 245 255);', // bg-purple-50
+                    'class' => 'stats-card stats-card-yesterday',
                 ]),
         ];
     }

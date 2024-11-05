@@ -15,13 +15,13 @@ class KolektorDailyStatsWidget extends BaseWidget
     protected function getStats(): array
     {
         $user = Auth::user();
-        
+
         if (!$user->hasRole('kolektor')) {
             return [];
         }
 
         $targetDate = Carbon::parse($this->date);
-        
+
         // Query to get total collection for the day from assigned pasars
         $dailyCollection = RetribusiPembayaran::query()
             ->whereIn('pasar_id', $user->pasars->pluck('id'))
@@ -41,15 +41,27 @@ class KolektorDailyStatsWidget extends BaseWidget
         return [
             Stat::make('Total Retribusi Hari Ini', 'Rp ' . number_format($dailyCollection, 0, ',', '.'))
                 ->description('Total pembayaran yang terkumpul')
-                ->color('success'),
-                
+                ->icon('heroicon-o-banknotes')
+                ->color('success')
+                ->extraAttributes([
+                    'class' => 'stat-card stat-card-collection',
+                ]),
+
             Stat::make('Pedagang Membayar', $pedagangPaidCount)
                 ->description('dari total ' . $totalPedagang . ' pedagang')
-                ->color('info'),
-                
+                ->icon('heroicon-o-users')
+                ->color('info')
+                ->extraAttributes([
+                    'class' => 'stat-card stat-card-paid',
+                ]),
+
             Stat::make('Sisa Pedagang', $totalPedagang - $pedagangPaidCount)
                 ->description('Pedagang yang belum membayar')
-                ->color('danger'),
+                ->icon('heroicon-o-user-minus')
+                ->color('danger')
+                ->extraAttributes([
+                    'class' => 'stat-card stat-card-unpaid',
+                ]),
         ];
     }
 }

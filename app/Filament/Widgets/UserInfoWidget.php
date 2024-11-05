@@ -14,13 +14,30 @@ class UserInfoWidget extends Widget
 
     public function getUserInfo()
     {
-        $user = Auth::user();
+        $user = Auth::user()->load('pasars');
+
+        // Update last login if it's null
+        if (!$user->last_login_at) {
+            $user->update(['last_login_at' => now()]);
+        }
+
         return [
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->getRoleNames()->first(), // Get the first role
             'pasars' => $user->pasars->pluck('name')->toArray(), // Get assigned pasar names
-            'last_login' => $user->last_login_at ? $user->last_login_at->format('M d, Y H:i') : 'N/A',
+            'last_login' => $user->last_login_at
+                ? $user->last_login_at->diffForHumans() // This will show "2 hours ago" instead of exact time
+                : 'First login',
         ];
+    }
+
+    public function mount()
+    {
+        // Update last login when widget is mounted
+        $user = Auth::user();
+        if ($user) {
+            $user->update(['last_login_at' => now()]);
+        }
     }
 }
