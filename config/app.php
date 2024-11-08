@@ -128,6 +128,21 @@ return [
         'path' => resource_path('css/filament/admin/theme.css'),
         'compile' => true,
     ],
+
+    'middleware' => [
+    // Other middleware configurations...
+
+    'cors' => [
+        'paths' => ['api/*'],
+        'allowed_methods' => ['*'],
+        'allowed_origins' => ['*'],
+        'allowed_origins_patterns' => [],
+        'allowed_headers' => ['*'],
+        'exposed_headers' => [],
+        'max_age' => 0,
+        'supports_credentials' => false,
+    ],
+],
 ],
 
 ];

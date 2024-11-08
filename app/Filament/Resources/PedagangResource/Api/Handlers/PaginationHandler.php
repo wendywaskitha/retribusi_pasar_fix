@@ -25,12 +25,13 @@ class PaginationHandler extends Handlers {
         }
 
         $query = QueryBuilder::for($query)
-        ->allowedFields($this->getAllowedFields() ?? [])
-        ->allowedSorts($this->getAllowedSorts() ?? [])
-        ->allowedFilters($this->getAllowedFilters() ?? [])
-        ->allowedIncludes($this->getAllowedIncludes() ?? [])
-        ->paginate(request()->query('per_page'))
-        ->appends(request()->query());
+            ->allowedFields($this->getAllowedFields() ?? [])
+            ->allowedSorts($this->getAllowedSorts() ?? [])
+            ->allowedFilters($this->getAllowedFilters() ?? [])
+            ->allowedIncludes($this->getAllowedIncludes() ?? ['pasar'])
+            ->with('pasar') // Eager load pasar relationship
+            ->paginate(request()->query('per_page'))
+            ->appends(request()->query());
 
         return static::getApiTransformer()::collection($query);
     }

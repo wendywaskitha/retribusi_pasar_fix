@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PedagangResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PedagangResource\RelationManagers;
+use App\Filament\Resources\PedagangResource\Api\Transformers\PedagangTransformer;
 
 class PedagangResource extends Resource
 {
@@ -162,5 +163,10 @@ class PedagangResource extends Resource
             'create' => Pages\CreatePedagang::route('/create'),
             'edit' => Pages\EditPedagang::route('/{record}/edit'),
         ];
+    }
+
+    public static function getApiTransformer()
+    {
+        return PedagangTransformer::class;
     }
 }

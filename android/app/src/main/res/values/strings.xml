@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Retribusi Pasar</string>
+    <string name="title_activity_main">Retribusi Pasar</string>
+    <string name="package_name">com.retribusipasar.app</string>
+    <string name="custom_url_scheme">com.retribusipasar.app</string>
+</resources>
