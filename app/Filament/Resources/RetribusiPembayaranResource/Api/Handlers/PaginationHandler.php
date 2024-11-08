@@ -20,7 +20,8 @@ class PaginationHandler extends Handlers {
         // Apply filtering for kolektor role
         $user = Auth::user();
         if ($user && $user->hasRole('kolektor')) {
-            $assignedPasarIds = $user->pasars()->pluck('id')->toArray();
+            // Get assigned pasar IDs
+            $assignedPasarIds = $user->pasars()->pluck('pasars.id')->toArray(); // Use 'pasars.id' to avoid ambiguity
             $query->whereIn('pasar_id', $assignedPasarIds);
         }
 
