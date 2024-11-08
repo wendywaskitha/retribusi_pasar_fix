@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\RetribusiPembayaranResource\Pages;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use App\Filament\Resources\RetribusiPembayaranResource\RelationManagers;
+use App\Filament\Resources\RetribusiPembayaranResource\Api\Transformers\RetribusiPembayaranTransformer;
 
 class RetribusiPembayaranResource extends Resource implements HasShieldPermissions
 {
@@ -293,6 +294,11 @@ class RetribusiPembayaranResource extends Resource implements HasShieldPermissio
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, 'retribusi-receipt.pdf');
+    }
+
+    public static function getApiTransformer()
+    {
+        return RetribusiPembayaranTransformer::class;
     }
 
 }

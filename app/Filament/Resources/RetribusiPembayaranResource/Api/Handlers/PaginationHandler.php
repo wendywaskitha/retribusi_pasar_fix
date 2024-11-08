@@ -29,7 +29,21 @@ class PaginationHandler extends Handlers {
         ->allowedFields($this->getAllowedFields() ?? [])
         ->allowedSorts($this->getAllowedSorts() ?? [])
         ->allowedFilters($this->getAllowedFilters() ?? [])
-        ->allowedIncludes($this->getAllowedIncludes() ?? [])
+        ->allowedIncludes($this->getAllowedIncludes() ?? [
+            'pedagang',
+            'pasar',
+            'user',
+            'items',
+            'items.retribusi'
+        ])
+        ->with([
+            'pedagang',
+            'pedagang.pasar',
+            'pasar',
+            'user',
+            'items',
+            'items.retribusi'
+        ])
         ->paginate(request()->query('per_page'))
         ->appends(request()->query());
 
