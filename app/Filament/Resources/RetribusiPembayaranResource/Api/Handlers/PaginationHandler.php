@@ -2,9 +2,8 @@
 namespace App\Filament\Resources\RetribusiPembayaranResource\Api\Handlers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Spatie\QueryBuilder\QueryBuilder;
 use Rupadana\ApiService\Http\Handlers;
+use Spatie\QueryBuilder\QueryBuilder;
 use App\Filament\Resources\RetribusiPembayaranResource;
 
 class PaginationHandler extends Handlers {
@@ -16,13 +15,6 @@ class PaginationHandler extends Handlers {
     {
         $query = static::getEloquentQuery();
         $model = static::getModel();
-
-        // Apply filtering for kolektor role
-        $user = Auth::user();
-        if ($user && $user->hasRole('kolektor')) {
-            $assignedPasarIds = $user->pasars()->pluck('pasars.id')->toArray();
-            $query->whereIn('pasar_id', $assignedPasarIds);
-        }
 
         $query = QueryBuilder::for($query)
         ->allowedFields($this->getAllowedFields() ?? [])
